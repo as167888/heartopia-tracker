@@ -9,7 +9,7 @@ on:
       - "config.py"
       - ".github/workflows/fetch.yml"
   schedule:
-    - cron: "0 * * * *"  # 每小时整点 (UTC)
+    - cron: "7 * * * *"  # 每小时第7分钟 (UTC)，避开整点高峰
   workflow_dispatch:      # 手动触发
 
 permissions:
