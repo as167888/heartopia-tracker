@@ -1,6 +1,13 @@
 name: Fetch Discord Data
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - "data/**"
+      - "fetcher.py"
+      - "config.py"
+      - ".github/workflows/fetch.yml"
   schedule:
     - cron: "0 * * * *"  # 每小时整点 (UTC)
   workflow_dispatch:      # 手动触发
