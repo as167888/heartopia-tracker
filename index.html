@@ -231,7 +231,7 @@
     });
   }
 
-  fetch('data/heartopia_data.json')
+  fetch('data/heartopia_data.json?t=' + Date.now())
     .then(r => r.json())
     .then(render)
     .catch(() => {
