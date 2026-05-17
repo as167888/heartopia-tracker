@@ -1,0 +1,15 @@
+name = "heartopia-tracker"
+main = "src/index.js"
+compatibility_date = "2026-05-01"
+
+[triggers]
+crons = ["7 * * * *"]
+
+[vars]
+GITHUB_OWNER = "as167888"
+GITHUB_REPO = "heartopia-tracker"
+DATA_PATH = "data/heartopia_data.json"
+DISCORD_API = "https://discord.com/api/v9/invites/heartopia?with_counts=true"
+
+# Set via: wrangler secret put GITHUB_TOKEN
+# Needs a GitHub PAT with repo (Contents) write permission

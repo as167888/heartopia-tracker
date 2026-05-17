@@ -1,17 +1,7 @@
 name: Fetch Discord Data
 
 on:
-  push:
-    branches: [master]
-    paths:
-      - "data/**"
-      - "fetcher.py"
-      - "config.py"
-      - ".github/workflows/fetch.yml"
-  schedule:
-    - cron: "7 * * * *"   # 每小时第7分钟 (北京时间)
-    - cron: "37 * * * *"  # 每小时第37分钟 (北京时间)，备选触发
-  workflow_dispatch:      # 手动触发
+  workflow_dispatch:      # 手动触发 (定时抓取已迁移至 Cloudflare Workers)
 
 permissions:
   contents: write
