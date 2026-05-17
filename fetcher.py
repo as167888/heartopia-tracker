@@ -1,7 +1,8 @@
 import json
 import os
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -35,7 +36,7 @@ def fetch_invite_data():
 def save_to_json(info):
     os.makedirs(config.DATA_DIR, exist_ok=True)
 
-    beijing_tz = timezone(timedelta(hours=8))
+    beijing_tz = ZoneInfo("Asia/Shanghai")
     now = datetime.now(beijing_tz)
     json_path = os.path.join(config.DATA_DIR, "heartopia_data.json")
 
