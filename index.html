@@ -155,6 +155,19 @@
     return n.toLocaleString();
   }
 
+  function normalizeData(data) {
+    const buckets = {};
+    data.forEach(d => {
+      const hour = d.timestamp.substring(0, 13);
+      buckets[hour] = d;
+    });
+    return Object.values(buckets).sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  }
+
+  function shortTime(ts) {
+    return ts.substring(5, 16);
+  }
+
   let chartData = [];
 
   function downloadCSV(rows, filename) {
@@ -193,9 +206,10 @@
     }
 
     chartData = data;
-    const timestamps = data.map(d => d.timestamp);
-    const members = data.map(d => d.member_count);
-    const online = data.map(d => d.presence_count);
+    const normalized = normalizeData(data);
+    const timestamps = normalized.map(d => shortTime(d.timestamp));
+    const members = normalized.map(d => d.member_count);
+    const online = normalized.map(d => d.presence_count);
     const latest = data[data.length - 1];
 
     document.getElementById('memberCount').textContent = latest.member_count.toLocaleString();
