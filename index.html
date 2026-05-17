@@ -90,17 +90,17 @@
 
   <div class="chart-container">
     <div class="chart-toolbar">
-      <span class="title">注册成员趋势</span>
-      <button class="btn-download" onclick="downloadMembers()">下载 CSV</button>
-    </div>
-    <div class="chart-box" id="chartMembers"></div>
-  </div>
-  <div class="chart-container">
-    <div class="chart-toolbar">
       <span class="title">在线人数趋势</span>
       <button class="btn-download" onclick="downloadOnline()">下载 CSV</button>
     </div>
     <div class="chart-box" id="chartOnline"></div>
+  </div>
+  <div class="chart-container">
+    <div class="chart-toolbar">
+      <span class="title">注册成员趋势</span>
+      <button class="btn-download" onclick="downloadMembers()">下载 CSV</button>
+    </div>
+    <div class="chart-box" id="chartMembers"></div>
   </div>
 
   <footer>
@@ -212,7 +212,7 @@
           [{offset:0, color:'rgba(84,112,198,0.3)'},{offset:1, color:'rgba(84,112,198,0.02)'}]) },
       }],
       xAxis: { ...darkTheme.xAxis, data: timestamps },
-      yAxis: { ...darkTheme.yAxis, axisLabel: { ...darkTheme.yAxis.axisLabel, formatter: formatNumber } },
+      yAxis: { ...darkTheme.yAxis, min: 850000, max: 950000, axisLabel: { ...darkTheme.yAxis.axisLabel, formatter: formatNumber } },
       tooltip: { ...darkTheme.tooltip, formatter: p => `${p[0].axisValue}<br/>成员: <b>${p[0].value.toLocaleString()}</b>` },
     });
 
@@ -226,7 +226,7 @@
           [{offset:0, color:'rgba(145,204,117,0.3)'},{offset:1, color:'rgba(145,204,117,0.02)'}]) },
       }],
       xAxis: { ...darkTheme.xAxis, data: timestamps },
-      yAxis: { ...darkTheme.yAxis, axisLabel: { ...darkTheme.yAxis.axisLabel, formatter: formatNumber } },
+      yAxis: { ...darkTheme.yAxis, min: 90000, max: 180000, axisLabel: { ...darkTheme.yAxis.axisLabel, formatter: formatNumber } },
       tooltip: { ...darkTheme.tooltip, formatter: p => `${p[0].axisValue}<br/>在线: <b>${p[0].value.toLocaleString()}</b>` },
     });
   }
