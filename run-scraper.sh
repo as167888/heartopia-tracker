@@ -14,7 +14,20 @@ fi
 export GITHUB_TOKEN="$(cat "$TOKEN_FILE")"
 cd "$REPO_DIR" || exit 1
 
-# 先拉取最新数据，避免推送冲突
-git pull origin HEAD --rebase >> "$LOG_FILE" 2>&1
+# git pull with retry
+max_retries=3
+for ((i=1; i<=max_retries; i++)); do
+    if git pull origin HEAD --rebase >> "$LOG_FILE" 2>&1; then
+        break
+    fi
+    if [ "$i" -lt "$max_retries" ]; then
+        delay=$((5 * 2 ** (i - 1)))
+        echo "[$(date)] git pull 失败，${delay}s 后重试 (第 ${i}/${max_retries} 次)..." >> "$LOG_FILE"
+        sleep "$delay"
+    else
+        echo "[$(date)] git pull 最终失败，放弃本次抓取" >> "$LOG_FILE"
+        exit 1
+    fi
+done
 
 python3 "$REPO_DIR/scraper.py" >> "$LOG_FILE" 2>&1

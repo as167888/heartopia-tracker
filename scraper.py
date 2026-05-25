@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 import urllib.request
 from datetime import datetime, timezone, timedelta
 
@@ -23,19 +24,29 @@ def beijing_timestamp():
 
 def fetch_discord():
     req = urllib.request.Request(DISCORD_API, headers={"User-Agent": USER_AGENT})
-    # 支持 HTTP 代理（国内访问 Discord 需要）
     proxy = os.environ.get("HTTP_PROXY") or os.environ.get("http_proxy")
-    if proxy:
-        proxy_handler = urllib.request.ProxyHandler({"https": proxy})
-        opener = urllib.request.build_opener(proxy_handler)
-        resp = opener.open(req, timeout=30)
-    else:
-        resp = urllib.request.urlopen(req, timeout=30)
-    data = json.loads(resp.read())
-    return {
-        "member_count": data["approximate_member_count"],
-        "presence_count": data["approximate_presence_count"],
-    }
+
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            if proxy:
+                proxy_handler = urllib.request.ProxyHandler({"https": proxy})
+                opener = urllib.request.build_opener(proxy_handler)
+                resp = opener.open(req, timeout=30)
+            else:
+                resp = urllib.request.urlopen(req, timeout=30)
+            data = json.loads(resp.read())
+            return {
+                "member_count": data["approximate_member_count"],
+                "presence_count": data["approximate_presence_count"],
+            }
+        except (urllib.error.URLError, OSError) as e:
+            if attempt < max_retries - 1:
+                delay = 5 * (2 ** attempt)
+                print(f"  请求失败 ({e})，{delay}s 后重试 (第 {attempt + 1}/{max_retries} 次)...")
+                time.sleep(delay)
+            else:
+                raise
 
 
 def read_data():
@@ -52,11 +63,25 @@ def write_data(entries):
 def git_push(token: str):
     remote_url = f"https://oauth2:{token}@github.com/as167888/heartopia-tracker.git"
 
-    subprocess.run(["git", "add", DATA_PATH], check=True)
-    subprocess.run(["git", "-c", f"user.name=heartopia-bot",
-                         "-c", f"user.email=bot@heartopia.local",
-                         "commit", "-m", "Update data [skip ci]"], check=True)
-    subprocess.run(["git", "push", remote_url, "HEAD"], check=True)
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            subprocess.run(["git", "add", DATA_PATH], check=True)
+            subprocess.run(["git", "-c", f"user.name=heartopia-bot",
+                                 "-c", f"user.email=bot@heartopia.local",
+                                 "commit", "-m", "Update data [skip ci]"], check=True)
+            subprocess.run(["git", "push", remote_url, "HEAD"], check=True)
+            return
+        except subprocess.CalledProcessError as e:
+            if attempt < max_retries - 1:
+                delay = 5 * (2 ** attempt)
+                print(f"  git push 失败 ({e})，{delay}s 后重试 (第 {attempt + 1}/{max_retries} 次)...")
+                # 重置本地改动，下次重试重新 add/commit/push
+                subprocess.run(["git", "reset", "--soft", "HEAD~1"], capture_output=True)
+                subprocess.run(["git", "restore", "--staged", DATA_PATH], capture_output=True)
+                time.sleep(delay)
+            else:
+                raise
 
 
 def main():
