@@ -72,10 +72,10 @@ def git_push(token: str):
                                  "commit", "-m", "Update data [skip ci]"], check=True)
             subprocess.run(["git", "push", remote_url, "HEAD"], check=True)
             return
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             if attempt < max_retries - 1:
                 delay = 5 * (2 ** attempt)
-                print(f"  git push 失败 ({e})，{delay}s 后重试 (第 {attempt + 1}/{max_retries} 次)...")
+                print(f"  git push 失败 (exit code 非零)，{delay}s 后重试 (第 {attempt + 1}/{max_retries} 次)...")
                 # 重置本地改动，下次重试重新 add/commit/push
                 subprocess.run(["git", "reset", "--soft", "HEAD~1"], capture_output=True)
                 subprocess.run(["git", "restore", "--staged", DATA_PATH], capture_output=True)
