@@ -7818,5 +7818,25 @@
     "timestamp": "2026-07-23 20:07:02",
     "member_count": 859741,
     "presence_count": 116029
+  },
+  {
+    "timestamp": "2026-07-23 21:07:04",
+    "member_count": 859692,
+    "presence_count": 130084
+  },
+  {
+    "timestamp": "2026-07-23 22:07:03",
+    "member_count": 859630,
+    "presence_count": 140521
+  },
+  {
+    "timestamp": "2026-07-24 00:07:04",
+    "member_count": 859570,
+    "presence_count": 143635
+  },
+  {
+    "timestamp": "2026-07-24 02:26:51",
+    "member_count": 859498,
+    "presence_count": 126570
   }
 ]
