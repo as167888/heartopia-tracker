@@ -97,6 +97,13 @@
   </div>
   <div class="chart-container">
     <div class="chart-toolbar">
+      <span class="title">每日在线峰值</span>
+      <button class="btn-download" onclick="downloadPeak()">下载 CSV</button>
+    </div>
+    <div class="chart-box" id="chartPeak"></div>
+  </div>
+  <div class="chart-container">
+    <div class="chart-toolbar">
       <span class="title">注册成员趋势</span>
       <button class="btn-download" onclick="downloadMembers()">下载 CSV</button>
     </div>
@@ -112,6 +119,7 @@
 (function() {
   const chartMembers = echarts.init(document.getElementById('chartMembers'));
   const chartOnline = echarts.init(document.getElementById('chartOnline'));
+  const chartPeak  = echarts.init(document.getElementById('chartPeak'));
 
   const darkTheme = {
     textStyle: { color: '#aaa' },
@@ -169,6 +177,7 @@
   }
 
   let chartData = [];
+  let peakData = [];
 
   function downloadCSV(rows, filename) {
     const BOM = '﻿';
@@ -181,6 +190,25 @@
     a.click();
     URL.revokeObjectURL(url);
   }
+
+  function computeDailyPeaks(data) {
+    const daily = {};
+    data.forEach(d => {
+      const day = d.timestamp.substring(0, 10);
+      if (!daily[day] || d.presence_count > daily[day].presence_count) {
+        daily[day] = d;
+      }
+    });
+    return Object.values(daily).sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  }
+
+  window.downloadPeak = function() {
+    if (!peakData.length) return;
+    const rows = [['date', 'peak_online']].concat(
+      peakData.map(d => [d.timestamp.substring(0, 10), d.presence_count])
+    );
+    downloadCSV(rows, 'heartopia_daily_peak.csv');
+  };
 
   window.downloadMembers = function() {
     if (!chartData.length) return;
@@ -212,6 +240,15 @@
     const online = normalized.map(d => d.presence_count);
     const latest = data[data.length - 1];
 
+    peakData = computeDailyPeaks(data);
+    const peakTimestamps = peakData.map(d => shortTime(d.timestamp));
+    const peakValues = peakData.map(d => d.presence_count);
+
+    const memberMin = Math.floor(Math.min(...members) / 10000) * 10000 - 5000;
+    const memberMax = Math.ceil(Math.max(...members) / 10000) * 10000 + 5000;
+    const onlineMin = Math.floor(Math.min(...online) / 5000) * 5000 - 5000;
+    const onlineMax = Math.ceil(Math.max(...online) / 5000) * 5000 + 5000;
+
     document.getElementById('memberCount').textContent = latest.member_count.toLocaleString();
     document.getElementById('onlineCount').textContent = latest.presence_count.toLocaleString();
     document.getElementById('lastUpdate').textContent = latest.timestamp;
@@ -226,7 +263,7 @@
           [{offset:0, color:'rgba(84,112,198,0.3)'},{offset:1, color:'rgba(84,112,198,0.02)'}]) },
       }],
       xAxis: { ...darkTheme.xAxis, data: timestamps },
-      yAxis: { ...darkTheme.yAxis, min: 850000, max: 950000, axisLabel: { ...darkTheme.yAxis.axisLabel, formatter: formatNumber } },
+      yAxis: { ...darkTheme.yAxis, min: memberMin, max: memberMax, axisLabel: { ...darkTheme.yAxis.axisLabel, formatter: formatNumber } },
       tooltip: { ...darkTheme.tooltip, formatter: p => `${p[0].axisValue}<br/>成员: <b>${p[0].value.toLocaleString()}</b>` },
     });
 
@@ -240,8 +277,22 @@
           [{offset:0, color:'rgba(145,204,117,0.3)'},{offset:1, color:'rgba(145,204,117,0.02)'}]) },
       }],
       xAxis: { ...darkTheme.xAxis, data: timestamps },
-      yAxis: { ...darkTheme.yAxis, min: 90000, max: 180000, axisLabel: { ...darkTheme.yAxis.axisLabel, formatter: formatNumber } },
+      yAxis: { ...darkTheme.yAxis, min: onlineMin, max: onlineMax, axisLabel: { ...darkTheme.yAxis.axisLabel, formatter: formatNumber } },
       tooltip: { ...darkTheme.tooltip, formatter: p => `${p[0].axisValue}<br/>在线: <b>${p[0].value.toLocaleString()}</b>` },
+    });
+
+    chartPeak.setOption({
+      ...darkTheme,
+      series: [{
+        name: '每日在线峰值', type: 'line', data: peakValues,
+        smooth: true, symbol: 'circle', symbolSize: 4,
+        lineStyle: { color: '#fac858', width: 2 },
+        areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,
+          [{offset:0, color:'rgba(250,200,88,0.3)'},{offset:1, color:'rgba(250,200,88,0.02)'}]) },
+      }],
+      xAxis: { ...darkTheme.xAxis, data: peakTimestamps },
+      yAxis: { ...darkTheme.yAxis, min: onlineMin, max: onlineMax, axisLabel: { ...darkTheme.yAxis.axisLabel, formatter: formatNumber } },
+      tooltip: { ...darkTheme.tooltip, formatter: p => `${p[0].axisValue}<br/>峰值在线: <b>${p[0].value.toLocaleString()}</b>` },
     });
   }
 
@@ -256,6 +307,7 @@
   window.addEventListener('resize', () => {
     chartMembers.resize();
     chartOnline.resize();
+    chartPeak.resize();
   });
 })();
 </script>
