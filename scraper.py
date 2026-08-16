@@ -11,6 +11,8 @@ from datetime import datetime, timezone, timedelta
 
 DISCORD_API = "https://discord.com/api/v9/invites/heartopia?with_counts=true"
 DATA_PATH = "data/heartopia_data.json"
+BACKUP_PATH = "data/heartopia_data_backup.json"
+LOG_PATH = "data/heartopia_data_log.jsonl"  # 追加式日志，每行一条记录，防丢
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
@@ -50,14 +52,25 @@ def fetch_discord():
 
 
 def read_data():
-    with open(DATA_PATH, "r") as f:
-        return json.load(f)
+    try:
+        with open(DATA_PATH, "r") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, FileNotFoundError):
+        print(f"  主数据文件损坏或不存在，尝试从备份恢复 ({BACKUP_PATH})")
+        with open(BACKUP_PATH, "r") as f:
+            return json.load(f)
 
 
 def write_data(entries):
+    json_str = json.dumps(entries, indent=2, ensure_ascii=False) + "\n"
     with open(DATA_PATH, "w") as f:
-        json.dump(entries, f, indent=2, ensure_ascii=False)
-        f.write("\n")
+        f.write(json_str)
+    # 本地备份，防 git 冲突损坏主文件
+    with open(BACKUP_PATH, "w") as f:
+        f.write(json_str)
+    # 追加式日志，仅追加最新一条，不怕主文件损坏
+    with open(LOG_PATH, "a") as f:
+        f.write(json.dumps(entries[-1], ensure_ascii=False) + "\n")
 
 
 def git_push(token: str):

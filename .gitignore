@@ -3,5 +3,7 @@ __pycache__/
 .DS_Store
 node_modules/
 data/*.csv
+data/*_backup.json
+data/*_log.jsonl
 .github-token
 cron.log
